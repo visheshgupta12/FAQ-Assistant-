@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FAQ Assistant – ShopEase Help Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0b0920; --ink: #f4f2ff; --muted: #a9a4cf; --solid: #15123a;
+    --glass: rgba(255,255,255,.07); --glass2: rgba(255,255,255,.12); --line: rgba(255,255,255,.14);
+    --brand: #8b6cff; --brand2: #29d3ee; --pink: #ff5fa2; --danger: #ff8aa6;
+    --grad: linear-gradient(120deg, #8b6cff 0%, #5b8cff 45%, #29d3ee 100%);
+    --blob1: #6d4aff; --blob2: #14b8d8; --blob3: #ff4f9a; --blobop: .42;
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f0ff; --ink: #1a1540; --muted: #62599a; --solid: #ffffff;
+    --glass: rgba(255,255,255,.72); --glass2: rgba(255,255,255,.95); --line: rgba(80,60,200,.16);
+    --danger: #c62d54; --blobop: .28;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { color-scheme: light dark; }
+  body { font-family: Manrope, system-ui, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; line-height: 1.55; overflow-x: hidden; }
+  :focus-visible { outline: 3px solid var(--brand2); outline-offset: 2px; }
+
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: var(--blobop); animation: drift 22s ease-in-out infinite alternate; }
+  .b1 { width: 500px; height: 500px; background: var(--blob1); top: -140px; left: -120px; }
+  .b2 { width: 440px; height: 440px; background: var(--blob2); top: 30%; right: -160px; animation-delay: -8s; }
+  .b3 { width: 360px; height: 360px; background: var(--blob3); bottom: -140px; left: 30%; animation-delay: -14s; }
+  @keyframes drift { to { transform: translate(60px, 40px) scale(1.12); } }
+
+  .wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 24px 20px 40px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 26px; }
+  .logo { display: flex; align-items: center; gap: 12px; font-family: Sora, sans-serif; font-weight: 700; font-size: 1.15rem; }
+  .logo-mark { width: 42px; height: 42px; border-radius: 13px; background: var(--grad); color: #fff; display: grid; place-items: center; font-size: 1.2rem; box-shadow: 0 10px 28px -8px rgba(110,90,255,.8); }
+  .head-actions { display: flex; gap: 10px; }
+  .btn {
+    font: inherit; font-weight: 600; font-size: .92rem; color: var(--ink); background: var(--glass); border: 1px solid var(--line);
+    border-radius: 14px; padding: 10px 16px; cursor: pointer; backdrop-filter: blur(12px);
+  }
+  .btn:hover { border-color: var(--brand2); }
+  .btn.icon { width: 44px; padding: 0; font-size: 1.05rem; }
+
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 22px; align-items: start; }
+  .card { border-radius: 26px; border: 1px solid var(--line); background: var(--glass); backdrop-filter: blur(22px); box-shadow: 0 40px 90px -45px rgba(70,50,220,.7); }
+
+  .chat { display: flex; flex-direction: column; height: min(78vh, 720px); overflow: hidden; }
+  .chat-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .avatar { width: 40px; height: 40px; flex: none; border-radius: 50%; background: var(--grad); color: #fff; display: grid; place-items: center; font-size: 1.1rem; }
+  .chat-head h1 { font-family: Sora, sans-serif; font-size: 1.05rem; line-height: 1.2; }
+  .status { font-size: .82rem; color: var(--muted); }
+  .status::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3ddc97; margin-right: 6px; }
+  .chat-head .btn { margin-left: auto; padding: 8px 14px; }
+
+  .log { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
+  .row { display: flex; gap: 10px; max-width: 88%; animation: pop .25s ease-out; }
+  .row.user { align-self: flex-end; flex-direction: row-reverse; }
+  .row .avatar { width: 32px; height: 32px; font-size: .9rem; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+  .bubble { padding: 12px 16px; border-radius: 20px; border: 1px solid var(--line); background: var(--glass2); overflow-wrap: anywhere; }
+  .row.bot .bubble { border-top-left-radius: 6px; }
+  .row.user .bubble { border-top-right-radius: 6px; background: var(--grad); border-color: transparent; color: #fff; }
+  .bubble p + p { margin-top: 8px; }
+  .meta { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: .82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .badge { font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--glass); border: 1px solid var(--line); color: var(--brand2); }
+  .badge.mid { color: #ffc46b; } .badge.low { color: var(--danger); }
+  details { margin-top: 8px; font-size: .82rem; color: var(--muted); }
+  summary { cursor: pointer; font-weight: 600; }
+  details div { margin-top: 6px; line-height: 1.7; }
+  code { background: var(--glass); border: 1px solid var(--line); padding: 1px 7px; border-radius: 6px; font-size: .85em; color: var(--ink); }
+  .related { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .qchip {
+    font: inherit; font-size: .86rem; font-weight: 600; color: var(--ink); background: var(--glass); border: 1px solid var(--line);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer; text-align: left;
+  }
+  .qchip:hover { border-color: var(--brand2); color: var(--brand2); }
+  .typing span { display: inline-block; width: 8px; height: 8px; margin: 0 2px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+  .typing span:nth-child(2) { animation-delay: .15s; } .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+  .quick { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 20px 12px; }
+  .composer { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--line); }
+  .composer input {
+    flex: 1; font: inherit; font-size: 1rem; color: var(--ink); background: var(--glass2); border: 1px solid var(--line);
+    border-radius: 16px; padding: 13px 16px;
+  }
+  .composer input::placeholder { color: var(--muted); }
+  .send { font: inherit; font-weight: 800; color: #fff; background: var(--grad); border: none; border-radius: 16px; padding: 0 24px; cursor: pointer; box-shadow: 0 14px 30px -12px rgba(90,110,255,.95); }
+  .send:hover { filter: brightness(1.1); }
+
+  aside { display: grid; gap: 22px; }
+  .side { padding: 20px; }
+  .side h2 { font-family: Sora, sans-serif; font-size: 1.02rem; margin-bottom: 12px; }
+  .side ul { list-style: none; padding: 0; display: grid; gap: 8px; }
+  .side li button { width: 100%; text-align: left; font: inherit; font-size: .9rem; color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; cursor: pointer; }
+  .side li button:hover { border-color: var(--brand2); }
+  .steps { counter-reset: s; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 28px 1fr; gap: 10px; font-size: .88rem; color: var(--muted); }
+  .steps li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; background: var(--grad); color: #fff; font-weight: 700; display: grid; place-items: center; }
+  .steps b { color: var(--ink); display: block; }
+
+  dialog { border: 1px solid var(--line); border-radius: 24px; background: var(--solid); color: var(--ink); width: min(640px, 94vw); max-height: 88vh; padding: 0; }
+  dialog::backdrop { background: rgba(5,3,25,.6); backdrop-filter: blur(6px); }
+  .dlg-in { padding: 22px; display: grid; gap: 16px; }
+  .dlg-in h2 { font-family: Sora, sans-serif; font-size: 1.2rem; }
+  .faq-list { list-style: none; padding: 0; display: grid; gap: 8px; max-height: 240px; overflow-y: auto; }
+  .faq-list li { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: var(--glass); border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 14px; font-size: .9rem; }
+  .faq-list button { flex: none; font: inherit; font-size: .8rem; color: var(--danger); background: none; border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; cursor: pointer; }
+  .field { display: grid; gap: 6px; font-weight: 600; font-size: .9rem; }
+  .field input, .field textarea { font: inherit; font-weight: 400; color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; resize: vertical; }
+  .dlg-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn.primary { background: var(--grad); color: #fff; border-color: transparent; }
+
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .chat { height: 74vh; } .row { max-width: 94%; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="wrap">
+  <header>
+    <div class="logo"><span class="logo-mark" aria-hidden="true">💬</span> FAQ Assistant</div>
+    <div class="head-actions">
+      <button class="btn" id="manageBtn" type="button">Manage FAQs</button>
+      <button class="btn icon" id="themeBtn" type="button" aria-label="Switch between light and dark theme">🌙</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main class="card chat" aria-label="Chat">
+      <div class="chat-head">
+        <div class="avatar" aria-hidden="true">✦</div>
+        <div><h1>ShopEase help bot</h1><div class="status" id="status">Ready</div></div>
+        <button class="btn" id="clearBtn" type="button">New chat</button>
+      </div>
+      <div class="log" id="log" aria-live="polite"></div>
+      <div class="quick" id="quick"></div>
+      <form class="composer" id="form" autocomplete="off">
+        <input id="msg" type="text" placeholder="Ask a question, for example “How do I track my order?”" aria-label="Your question" maxlength="200" />
+        <button class="send" type="submit">Send</button>
+      </form>
+    </main>
+
+    <aside>
+      <section class="card side">
+        <h2>Popular questions</h2>
+        <ul id="popular"></ul>
+      </section>
+      <section class="card side">
+        <h2>How the bot works</h2>
+        <ul class="steps">
+          <li><div><b>Collect</b>FAQs are stored as question and answer pairs.</div></li>
+          <li><div><b>Preprocess</b>Lowercase, clean symbols, remove stop words, stem words.</div></li>
+          <li><div><b>Match</b>TF-IDF vectors and cosine similarity rank every FAQ.</div></li>
+          <li><div><b>Answer</b>The best match is shown with related questions.</div></li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <div class="dlg-in">
+    <h2>Manage FAQs</h2>
+    <ul class="faq-list" id="faqList"></ul>
+    <label class="field">New question<input id="newQ" type="text" maxlength="160" /></label>
+    <label class="field">Answer<textarea id="newA" rows="3" maxlength="600"></textarea></label>
+    <div class="dlg-actions">
+      <button class="btn primary" id="addBtn" type="button">Add FAQ</button>
+      <button class="btn" id="resetBtn" type="button">Reset to default</button>
+      <button class="btn" id="closeBtn" type="button" style="margin-left:auto">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* NLP:START ================================================================
+   Step 1 – COLLECT: the FAQ data set
+   Step 2 – PREPROCESS: clean, remove stop words, stem
+   Step 3 – MATCH: TF-IDF vectors + cosine similarity
+=========================================================================== */
+const DEFAULT_FAQS = [
+  { q: "How do I track my order?", a: "Open My Orders, pick your order and tap Track. You also get a tracking link by email and SMS as soon as it ships." },
+  { q: "How long does delivery take?", a: "Standard delivery takes 3 to 5 business days. Express delivery takes 1 to 2 business days in major cities." },
+  { q: "What are the delivery charges?", a: "Delivery is free on orders above ₹499. Below that a flat fee of ₹40 applies. Express delivery costs ₹99." },
+  { q: "How can I return a product?", a: "Most items can be returned within 10 days of delivery. Open My Orders, choose the item, tap Return and pick a pickup time. The item must be unused and in its original packaging." },
+  { q: "When will I get my refund?", a: "Refunds are issued within 5 to 7 business days after we receive the returned item. UPI and card refunds go back to the original payment method. Cash on Delivery refunds go to your bank account or ShopEase wallet." },
+  { q: "How do I cancel my order?", a: "You can cancel an order before it ships. Go to My Orders, select the order and tap Cancel. If it has already shipped, refuse the delivery or start a return after it arrives." },
+  { q: "Which payment methods do you accept?", a: "We accept UPI, credit and debit cards, net banking, wallets and Cash on Delivery for orders up to ₹5,000." },
+  { q: "Is Cash on Delivery available?", a: "Yes, Cash on Delivery is available for orders up to ₹5,000 in most pin codes. Enter your pin code at checkout to check." },
+  { q: "My payment failed but money was deducted. What should I do?", a: "Please do not pay again. The amount is usually returned automatically within 3 to 5 business days. If it is not, contact support with your transaction ID." },
+  { q: "How do I reset my password?", a: "Tap Login, then Forgot password. Enter your registered email or phone number and follow the link or OTP we send you." },
+  { q: "How do I create an account?", a: "Tap Sign up, enter your name, email and phone number, then verify with the OTP. You can also continue with Google." },
+  { q: "How do I change my delivery address?", a: "Before the order ships, go to My Orders and tap Edit address. After it ships the address cannot be changed. You can save addresses under Account > Addresses." },
+  { q: "How do I use a discount coupon?", a: "Enter the code in the Apply coupon box on the cart page before you pay. Only one coupon can be used per order and some products are excluded." },
+  { q: "Do products come with a warranty?", a: "Electronics carry the manufacturer warranty, usually 1 year. The warranty card is inside the box and your invoice is in My Orders." },
+  { q: "How do I contact customer support?", a: "Chat with us in the app, email support@shopease.example, or call 1800-000-0000 between 9 AM and 9 PM, every day." },
+  { q: "What if I receive a damaged or wrong item?", a: "We are sorry about that. Report it within 48 hours of delivery under My Orders > Report an issue and attach photos. We will send a replacement or a refund." },
+  { q: "Can I order from outside India?", a: "At the moment we deliver only within India. International shipping is planned for the future." },
+  { q: "How do I delete my account?", a: "Go to Account > Privacy > Delete account. Pending orders must be completed first. The deletion becomes permanent after 7 days." }
+];
+let faqs = DEFAULT_FAQS.map(f => ({ ...f }));
+
+const STOP = new Set(("a an the i me my we our you your it its is am are was were be been do does did can could would should will " +
+  "shall may might have has had to of for in on at by from with about into and or but if then so as this that these those what " +
+  "which who whom how when where why please tell want need get got there here also just any some take up out").split(" "));
+
+/* words that mean the same thing are mapped to one keyword */
+const SYN = {};
+function addSyn(canon, words) { words.split(" ").forEach(w => SYN[w] = canon); }
+addSyn("cost", "price prices pricing charge charges charged fee fees rate rates costs expensive cheap");
+addSyn("delivery", "ship ships shipped shipping shipment dispatch dispatched deliver delivered delivering delivers deliveries courier arrive arrives arrival parcel parcels package packages");
+addSyn("order", "purchase purchased buy bought booking");
+addSyn("track", "trace locate whereabouts status");
+addSyn("discount", "coupon coupons promo voucher offer offers code codes");
+addSyn("payment", "pay paid paying card cards upi wallet wallets netbanking");
+addSyn("contact", "call phone email mail reach helpline support agent help talk");
+addSyn("account", "sign signup register registration join");
+addSyn("login", "signin log");
+addSyn("damag", "broken defective faulty torn");
+addSyn("warranty", "guarantee warranties");
+addSyn("international", "abroad overseas foreign outside");
+addSyn("delet", "remove erase deactivate");
+addSyn("chang", "modify edit update correct");
+addSyn("duration", "long days day time soon fast quick speed eta late delay delayed");
+
+function undouble(w) { return /([bdgmnprtl])\1$/.test(w) ? w.slice(0, -1) : w; }
+function stem(w) {                       // light stemmer: plurals, -ing, -ed, final e
+  if (w.length < 4 || /\d/.test(w)) return w;
+  if (w.endsWith("ies")) w = w.slice(0, -3) + "y";
+  else if (/(ch|sh|x|z|ss)es$/.test(w)) w = w.slice(0, -2);
+  else if (w.endsWith("s") && !/(ss|us|is)$/.test(w)) w = w.slice(0, -1);
+  if (w.length > 5 && w.endsWith("ing")) w = undouble(w.slice(0, -3));
+  else if (w.length > 4 && w.endsWith("ed")) w = undouble(w.slice(0, -2));
+  if (w.length > 4 && w.endsWith("e")) w = w.slice(0, -1);
+  return w;
+}
+function normalize(w) { if (SYN[w]) return SYN[w]; const s = stem(w); return SYN[s] || s; }
+function tokenize(text) {
+  return text.toLowerCase()
+    .replace(/money\s*back/g, " refund ")      // common phrases -> keywords
+    .replace(/where\s+is|where\s+are/g, " track ")
+    .replace(/[^a-z0-9\s]/g, " ")          // remove punctuation and symbols
+    .split(/\s+/)
+    .filter(w => w.length > 1 && !STOP.has(w))   // remove stop words
+    .map(normalize);                        // synonyms + stemming
+}
+
+let index = null;
+function buildIndex() {
+  const docs = faqs.map(f => {              // question words count 3x, answer words 1x
+    const tf = {};
+    tokenize(f.q).forEach(t => tf[t] = (tf[t] || 0) + 3);
+    tokenize(f.a).forEach(t => tf[t] = (tf[t] || 0) + 1);
+    return tf;
+  });
+  const df = {};
+  docs.forEach(tf => Object.keys(tf).forEach(t => df[t] = (df[t] || 0) + 1));
+  const N = docs.length, idf = {};
+  Object.keys(df).forEach(t => idf[t] = Math.log((N + 1) / (df[t] + 1)) + 1);
+  const vecs = docs.map(tf => {
+    const v = {}; let n = 0;
+    for (const t in tf) { v[t] = (1 + Math.log(tf[t])) * idf[t]; n += v[t] * v[t]; }
+    return { v, norm: Math.sqrt(n) };
+  });
+  index = { idf, vecs };
+}
+function match(text) {
+  const tokens = tokenize(text);
+  const known = tokens.filter(t => index.idf[t]);
+  const qv = {}; let qn = 0;
+  known.forEach(t => qv[t] = (qv[t] || 0) + 1);
+  for (const t in qv) { qv[t] = (1 + Math.log(qv[t])) * index.idf[t]; qn += qv[t] * qv[t]; }
+  const results = index.vecs.map((d, i) => {
+    let dot = 0;
+    for (const t in qv) if (d.v[t]) dot += qv[t] * d.v[t];
+    return { i, score: d.norm && qn ? dot / (d.norm * Math.sqrt(qn)) : 0 };
+  }).sort((a, b) => b.score - a.score);
+  return { tokens, known, results };
+}
+const HIGH = 0.30, LOW = 0.14;              // confidence thresholds
+/* NLP:END */
+
+/* ---------------------------- Chat UI ---------------------------- */
+const $ = id => document.getElementById(id);
+const log = $("log"), msg = $("msg");
+const KEY = "faq-bot-data", THEME_KEY = "faq-bot-theme";
+
+function loadFaqs() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(d) && d.length) return d; } catch {}
+  return DEFAULT_FAQS.map(f => ({ ...f }));
+}
+function saveFaqs() { try { localStorage.setItem(KEY, JSON.stringify(faqs)); } catch {} }
+
+function scrollDown() { log.scrollTop = log.scrollHeight; }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+
+function addRow(role) {
+  const row = el("div", "row " + role);
+  if (role === "bot") row.appendChild(el("div", "avatar", "✦"));
+  const bubble = el("div", "bubble");
+  row.appendChild(bubble);
+  log.appendChild(row);
+  scrollDown();
+  return { row, bubble };
+}
+function chip(text) {
+  const b = el("button", "qchip", text);
+  b.type = "button";
+  b.addEventListener("click", () => ask(text));
+  return b;
+}
+function randomQuestions(n, skip = []) {
+  return faqs.map((f, i) => i).filter(i => !skip.includes(i)).sort(() => Math.random() - .5).slice(0, n).map(i => faqs[i].q);
+}
+function renderQuick(skip = []) {
+  const box = $("quick"); box.innerHTML = "";
+  randomQuestions(4, skip).forEach(q => box.appendChild(chip(q)));
+}
+function renderSide() {
+  $("popular").innerHTML = "";
+  faqs.slice(0, 6).forEach(f => {
+    const li = el("li"); const b = el("button", "", f.q); b.type = "button";
+    b.addEventListener("click", () => ask(f.q));
+    li.appendChild(b); $("popular").appendChild(li);
+  });
+  $("status").textContent = "Answers from " + faqs.length + " FAQs";
+}
+
+function botText(text, extra) {
+  const { bubble } = addRow("bot");
+  bubble.appendChild(el("p", "", text));
+  if (extra) extra(bubble);
+  scrollDown();
+}
+
+function answer(text) {
+  const t = text.trim().toLowerCase();
+  if (/^(hi+|hello+|hey+|hola|namaste|good (morning|afternoon|evening))\b/.test(t)) {
+    return botText("Hello! I can answer questions about orders, delivery, returns, payments and your account. What would you like to know?");
+  }
+  if (/^(thanks|thank you|thx|ok thanks|great thanks)/.test(t)) return botText("You’re welcome! Ask me anything else.");
+  if (/^(bye|goodbye|see you)/.test(t)) return botText("Goodbye! Come back anytime.");
+
+  const r = match(text);
+  const best = r.results[0];
+
+  if (!r.known.length || best.score < LOW) {
+    return botText("I couldn’t find an answer to that. Try rephrasing, or pick one of these questions:", b => {
+      const box = el("div", "related");
+      randomQuestions(3).forEach(q => box.appendChild(chip(q)));
+      b.appendChild(box);
+    });
+  }
+
+  const strong = best.score >= HIGH;
+  const faq = faqs[best.i];
+  const { bubble } = addRow("bot");
+  if (!strong) bubble.appendChild(el("p", "", "I’m not completely sure, but this may help:"));
+  bubble.appendChild(el("p", "", faq.a));
+
+  const meta = el("div", "meta");
+  meta.appendChild(el("span", "badge " + (strong ? "" : "mid"), (strong ? "Best match " : "Possible match ") + Math.round(best.score * 100) + "%"));
+  meta.appendChild(el("span", "", "Matched question: " + faq.q));
+  bubble.appendChild(meta);
+
+  const det = el("details");
+  det.appendChild(el("summary", "", "How I understood your question"));
+  const d = el("div");
+  d.innerHTML = "Cleaned words: " + (r.tokens.length ? r.tokens.map(w => "<code>" + w.replace(/[<>&]/g, "") + "</code>").join(" ") : "none") +
+                "<br>Words found in FAQs: " + r.known.map(w => "<code>" + w.replace(/[<>&]/g, "") + "</code>").join(" ");
+  det.appendChild(d);
+  bubble.appendChild(det);
+
+  const others = r.results.slice(1, 3).filter(x => x.score >= LOW * 0.7);
+  if (others.length) {
+    const box = el("div", "related");
+    others.forEach(o => box.appendChild(chip(faqs[o.i].q)));
+    bubble.appendChild(box);
+  }
+  renderQuick([best.i]);
+  scrollDown();
+}
+
+function ask(text) {
+  text = text.trim();
+  if (!text) return;
+  addRow("user").bubble.textContent = text;
+  msg.value = "";
+  const { row, bubble } = addRow("bot");
+  bubble.className = "bubble typing";
+  bubble.innerHTML = "<span></span><span></span><span></span>";
+  setTimeout(() => { row.remove(); answer(text); }, 450);
+}
+
+function newChat() {
+  log.innerHTML = "";
+  botText("Hi! I’m the ShopEase help bot. Ask me about orders, delivery, returns, payments or your account.");
+  renderQuick();
+}
+
+/* ---------------------------- FAQ manager ---------------------------- */
+function renderManager() {
+  const ul = $("faqList"); ul.innerHTML = "";
+  faqs.forEach((f, i) => {
+    const li = el("li"); li.appendChild(el("span", "", f.q));
+    const b = el("button", "", "Delete"); b.type = "button";
+    b.addEventListener("click", () => { if (faqs.length > 1) { faqs.splice(i, 1); refreshData(); } });
+    li.appendChild(b); ul.appendChild(li);
+  });
+}
+function refreshData() { saveFaqs(); buildIndex(); renderManager(); renderSide(); renderQuick(); }
+$("manageBtn").addEventListener("click", () => { renderManager(); $("dlg").showModal(); });
+$("closeBtn").addEventListener("click", () => $("dlg").close());
+$("addBtn").addEventListener("click", () => {
+  const q = $("newQ").value.trim(), a = $("newA").value.trim();
+  if (!q || !a) return;
+  faqs.push({ q, a });
+  $("newQ").value = ""; $("newA").value = "";
+  refreshData();
+});
+$("resetBtn").addEventListener("click", () => { faqs = DEFAULT_FAQS.map(f => ({ ...f })); refreshData(); });
+
+/* ---------------------------- Events + theme ---------------------------- */
+$("form").addEventListener("submit", e => { e.preventDefault(); ask(msg.value); });
+$("clearBtn").addEventListener("click", newChat);
+
+function applyTheme(t) { document.documentElement.dataset.theme = t; $("themeBtn").textContent = t === "dark" ? "☀️" : "🌙"; }
+let saved = null; try { saved = localStorage.getItem(THEME_KEY); } catch {}
+applyTheme(saved || "dark");
+$("themeBtn").addEventListener("click", () => {
+  const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(t); try { localStorage.setItem(THEME_KEY, t); } catch {}
+});
+
+faqs = loadFaqs();
+buildIndex();
+renderSide();
+newChat();
+</script>
+</body>
+</html>
